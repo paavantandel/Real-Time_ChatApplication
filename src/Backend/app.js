@@ -5,6 +5,8 @@ const http = require("http");
 const { Server } = require("socket.io");
 const authRoutes = require("./Routes/Auth")
 const messageRoutes = require("./Routes/Messages");
+const GroupRoutes = require("./Routes/Group");
+
 require("dotenv").config();
 
 const app = express();
@@ -31,29 +33,51 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/message", messageRoutes);
+app.use("/api/group", GroupRoutes);
 
-let onlineUsers = {};
+const onlineUsers = {};
 
 io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  // Join private room
   socket.on("join", (userId) => {
     onlineUsers[userId] = socket.id;
+    console.log(`${userId} is online with socket ID: ${socket.id}`);
   });
 
+  // Send private message
   socket.on("sendMessage", ({ senderId, receiverId, message }) => {
-   const receiverSocketId = onlineUsers[receiverId];
-
+    const receiverSocketId = onlineUsers[receiverId];
     const messageData = { senderId, message };
 
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("getMessage", messageData); // 👈 send only to receiver
+      io.to(receiverSocketId).emit("getMessage", messageData);
     }
   });
 
+  // Join a group chat room
+  socket.on("joinGroup", (groupId) => {
+    socket.join(groupId);
+    console.log(`User ${socket.id} joined group ${groupId}`);
+  });
+
+  // Send message to group
+  socket.on("sendGroupMessage", ({ senderId, groupId, message }) => {
+    io.to(groupId).emit("getGroupMessage", { senderId, groupId, message });
+  });
+
+  // Remove user on disconnect
   socket.on("disconnect", () => {
-    for (const [userId, id] of Object.entries(onlineUsers)) {
-      if (id === socket.id) delete onlineUsers[userId];
+    for (const [userId, socketId] of Object.entries(onlineUsers)) {
+      if (socketId === socket.id) {
+        delete onlineUsers[userId];
+        console.log(`${userId} disconnected`);
+        break;
+      }
     }
   });
 });
+
 
 server.listen(5000, () => console.log("Backend running on 5000"));
