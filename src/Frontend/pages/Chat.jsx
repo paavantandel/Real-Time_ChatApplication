@@ -22,18 +22,28 @@ function Chat() {
   const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
 
+  console.log("User:", users);
   useEffect(() => {
     socket.emit("join", user.id);
 
-    socket.on("getMessage", (data) => {
+    const handleMessage = (data) => {
       if (data.senderId !== user.id) {
+        console.log("New message received:", data);
         setChat((prev) => [...prev, data]);
-        toast.info(`New message from ${data.senderId}: ${data.message}`);
-      }
-    });
 
-    return () => socket.off("getMessage");
-  }, []);
+        const sender = users.find(u => u._id === data.senderId);
+        console.log("Sender:", sender);
+        toast.info(`New message from ${sender ? sender.username : "Unknown"}: ${data.message}`);
+      }
+    };
+
+    socket.on("getMessage", handleMessage);
+
+    return () => {
+      socket.off("getMessage", handleMessage); 
+    };
+}, [users]); 
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -131,6 +141,13 @@ function Chat() {
       console.error(error);
     }
   };
+
+  const getUsername = (id) => {
+    if (id === user.id) return "You";
+    const found = users.find(u => u._id === id);
+    return found ? found.username : "Unknown";
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center p-4">
@@ -232,7 +249,7 @@ function Chat() {
       <div className="w-full max-w-md h-64 overflow-y-auto border rounded p-2 bg-white">
         {filteredChat.map((msg, i) => (
           <div key={i} className="text-sm mb-1">
-            <span className="font-bold">{msg.senderId}</span>: {msg.message}
+            <span className="font-bold">{getUsername(msg.senderId)}</span>: {msg.message}
           </div>
         ))}
       </div>
