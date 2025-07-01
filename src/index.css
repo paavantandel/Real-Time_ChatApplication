@@ -1,1 +1,12 @@
 @import "tailwindcss";
+/* @keyframes blueFade {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.bg-blue-animated {
+  background: linear-gradient(-45deg, #dbeafe, #bfdbfe, #93c5fd, #60a5fa);
+  background-size: 400% 400%;
+  animation: blueFade 20s ease infinite;
+} */
