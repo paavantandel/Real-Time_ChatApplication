@@ -71,12 +71,22 @@ function Chat() {
     socket.emit("join", user.id);
 
     const handleMessage = (data) => {
-      if (data.senderId !== user.id) {
-        appendMessage(data.receiverId, data);
-        const sender = userMap[data.senderId] || "User";
-        toast.info(`New message from ${sender}: ${data.message}`);
-      }
-    };
+  const activeChatId = selectedGroup || receiver;
+
+  const chatId =
+    data.groupId || // For group messages (if any)
+    (data.senderId === user.id ? data.receiverId : data.senderId); // For private
+
+  // Display in UI
+  appendMessage(chatId, data);
+
+  // Optional toast
+  if (data.senderId !== user.id) {
+    const sender = userMap[data.senderId] || "User";
+    toast.info(`New message from ${sender}: ${data.message}`);
+  }
+};
+
 
     const handleGroupMessage = (data) => {
       
@@ -272,38 +282,85 @@ function Chat() {
         </button>
 
         {/* User Selection */}
-        <select
-          className="border p-2 rounded w-full"
-          value={receiver}
-          onChange={(e) => {
-            setReceiver(e.target.value);
+
+        {/* Users List */}
+<div className="mt-6">
+  <h2 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-2 pl-2">Active Users</h2>
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="max-h-60 overflow-y-auto">
+      {users.map((u) => (
+        <button
+          key={u._id}
+          onClick={() => {
+            setReceiver(u._id);
             setSelectedGroup("");
           }}
+          className={`flex items-center w-full px-4 py-3 text-sm transition-colors ${
+            receiver === u._id
+              ? "bg-blue-50 border-l-4 border-blue-500"
+              : "hover:bg-gray-50 border-l-4 border-transparent"
+          }`}
         >
-          <option value="">👤 Select a user to chat</option>
-          {users.map((u) => (
-            <option key={u._id} value={u._id}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-3">
+            {u.username.charAt(0).toUpperCase()}
+          </div>
+          <div className="text-left">
+            <p className={`font-medium ${
+              receiver === u._id ? "text-blue-800" : "text-gray-800"
+            }`}>
               {u.username}
-            </option>
-          ))}
-        </select>
+            </p>
+            <p className={`text-xs ${
+              receiver === u._id ? "text-blue-600" : "text-gray-500"
+            }`}>
+            </p>
+          </div>
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
 
-        {/* Group Selection */}
-        <select
-          className="border p-2 rounded w-full"
-          value={selectedGroup}
-          onChange={(e) => {
-            setSelectedGroup(e.target.value);
+{/* Groups List */}
+<div className="mt-6">
+  <h2 className="text-xs font-medium uppercase tracking-wider text-gray-500 mb-2 pl-2">Group Chats</h2>
+  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="max-h-60 overflow-y-auto">
+      {groups.map((g) => (
+        <button
+          key={g._id}
+          onClick={() => {
+            setSelectedGroup(g._id);
             setReceiver("");
           }}
+          className={`flex items-center w-full px-4 py-3 text-sm transition-colors ${
+            selectedGroup === g._id
+              ? "bg-green-50 border-l-4 border-green-500"
+              : "hover:bg-gray-50 border-l-4 border-transparent"
+          }`}
         >
-          <option value="">👥 Select a group</option>
-          {groups.map((g) => (
-            <option key={g._id} value={g._id}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600 mr-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <p className={`font-medium ${
+              selectedGroup === g._id ? "text-green-800" : "text-gray-800"
+            }`}>
               {g.name}
-            </option>
-          ))}
-        </select>
+            </p>
+            <p className={`text-xs ${
+              selectedGroup === g._id ? "text-green-600" : "text-gray-500"
+            }`}>
+              {g.members.length} members
+            </p>
+          </div>
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
 
         {/* Search */}
         <input

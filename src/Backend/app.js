@@ -40,34 +40,54 @@ const onlineUsers = {};
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
-  // Join private room
+  // Track online users
   socket.on("join", (userId) => {
     onlineUsers[userId] = socket.id;
     console.log(`${userId} is online with socket ID: ${socket.id}`);
   });
 
-  // Send private message
+  // Handle private messages
   socket.on("sendMessage", ({ senderId, receiverId, message }) => {
     const receiverSocketId = onlineUsers[receiverId];
-    const messageData = { senderId, message };
+    const messageData = {
+      senderId,
+      receiverId,
+      message,
+      createdAt: new Date().toISOString()
+    };
 
+    // Emit to receiver
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("getMessage", messageData);
     }
+
+    // Emit to sender (so sender also gets real-time delivery confirmation)
+    const senderSocketId = onlineUsers[senderId];
+    if (senderSocketId && senderSocketId !== socket.id) {
+      io.to(senderSocketId).emit("getMessage", messageData);
+    }
+
+    // Optionally emit to current sender socket to be safe
+    socket.emit("getMessage", messageData);
   });
 
-  // Join a group chat room
+  // Group join
   socket.on("joinGroup", (groupId) => {
     socket.join(groupId);
     console.log(`User ${socket.id} joined group ${groupId}`);
   });
 
-  // Send message to group
+  // Group messaging
   socket.on("sendGroupMessage", ({ senderId, groupId, message }) => {
-    io.to(groupId).emit("getGroupMessage", { senderId, groupId, message });
+    io.to(groupId).emit("getGroupMessage", {
+      senderId,
+      groupId,
+      message,
+      createdAt: new Date().toISOString()
+    });
   });
 
-  // Remove user on disconnect
+  // Handle disconnect
   socket.on("disconnect", () => {
     for (const [userId, socketId] of Object.entries(onlineUsers)) {
       if (socketId === socket.id) {
