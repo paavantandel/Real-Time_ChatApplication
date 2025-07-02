@@ -2,12 +2,27 @@ const express = require("express");
 const Message = require("../Models/Message");
 const router = express.Router();
 
+// Create message (group or private)
 router.post("/", async (req, res) => {
-  const msg = await Message.create(req.body);
-  res.status(201).json(msg);
+  try {
+    const { sender, receiver, groupId, content } = req.body;
+
+    const msg = new Message({
+      sender,
+      receiver: groupId ? undefined : receiver,
+      groupId: groupId || undefined,
+      content
+    });
+
+    await msg.save();
+    res.status(201).json(msg);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.get("/:user1/:user2", async (req, res) => {
+// Get private messages
+router.get("/private/:user1/:user2", async (req, res) => {
   const { user1, user2 } = req.params;
   const messages = await Message.find({
     $or: [
@@ -18,24 +33,11 @@ router.get("/:user1/:user2", async (req, res) => {
   res.json(messages);
 });
 
-
 // Get group messages
-router.get('/group/:groupId', async (req, res) => {
-  const messages = await Message.find({ receiver: req.params.groupId });
+router.get("/group/:groupId", async (req, res) => {
+  const { groupId } = req.params;
+  const messages = await Message.find({ groupId }).sort("createdAt");
   res.json(messages);
 });
-
-// Get private messages
-router.get('/private/:userId/:otherUserId', async (req, res) => {
-  const { userId, otherUserId } = req.params;
-  const messages = await Message.find({
-    $or: [
-      { sender: userId, receiver: otherUserId },
-      { sender: otherUserId, receiver: userId }
-    ]
-  });
-  res.json(messages);
-});
-
 
 module.exports = router;

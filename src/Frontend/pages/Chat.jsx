@@ -5,7 +5,7 @@ import Picker from "@emoji-mart/react";
 import data from "@emoji-mart/data";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import v2 from "../../assets/v2.mp4";
+import { useRef } from "react";
 
 const socket = io("http://localhost:5000");
 
@@ -14,7 +14,7 @@ function Chat() {
     const stored = sessionStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
-  
+
   const [message, setMessage] = useState("");
   const [receiver, setReceiver] = useState("");
   const [users, setUsers] = useState([]);
@@ -29,37 +29,29 @@ function Chat() {
   const [userMap, setUserMap] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [hasSelectedChat, setHasSelectedChat] = useState(false);
-
-  // Initialize user and data
+  const messagesEndRef = useRef(null);
+  // Fetch user, users, groups
   useEffect(() => {
     const initialize = async () => {
       try {
-        if (!user) {
-          const stored = sessionStorage.getItem("user");
-          if (stored) {
-            setUser(JSON.parse(stored));
-          } else {
-            console.error("No user found in session storage");
-            return;
-          }
-        }
+        const stored = sessionStorage.getItem("user");
+        const parsedUser = stored ? JSON.parse(stored) : null;
+        if (!parsedUser) return;
 
-        // Fetch users and create user map
+        setUser(parsedUser);
+
         const usersRes = await axios.get("http://localhost:5000/api/auth/users");
-        const filtered = usersRes.data.filter((u) => u._id !== user.id);
+        const filtered = usersRes.data.filter((u) => u._id !== parsedUser.id);
         setUsers(filtered);
 
         const map = {};
-        filtered.forEach(u => {
+        filtered.forEach((u) => {
           map[u._id] = u.username;
         });
-        map[user.id] = "You";
+        map[parsedUser.id] = "You";
         setUserMap(map);
 
-        // Fetch groups
-        const groupsRes = await axios.get(
-          `http://localhost:5000/api/group/all/${user.id}`
-        );
+        const groupsRes = await axios.get(`http://localhost:5000/api/group/all/${parsedUser.id}`);
         setGroups(groupsRes.data);
 
         setIsLoading(false);
@@ -70,9 +62,9 @@ function Chat() {
     };
 
     initialize();
-  }, [user]);
+  }, []);
 
-  // Socket setup
+  // Socket event listeners
   useEffect(() => {
     if (!user) return;
 
@@ -80,16 +72,17 @@ function Chat() {
 
     const handleMessage = (data) => {
       if (data.senderId !== user.id) {
-        appendMessage(data.senderId, data);
+        appendMessage(data.receiverId, data);
         const sender = userMap[data.senderId] || "User";
         toast.info(`New message from ${sender}: ${data.message}`);
       }
     };
 
     const handleGroupMessage = (data) => {
-      appendMessage(data.groupId, data);
+      
       if (data.senderId !== user.id) {
-        const group = groups.find(g => g._id === data.groupId);
+        appendMessage(data.groupId, data);
+        const group = groups.find((g) => g._id === data.groupId);
         toast.info(`New message in group ${group ? group.name : "Group"}: ${data.message}`);
       }
     };
@@ -103,41 +96,46 @@ function Chat() {
     };
   }, [user, userMap, groups]);
 
-  // Join group when selected
+  // Join socket room for group
   useEffect(() => {
     if (selectedGroup) {
       socket.emit("joinGroup", selectedGroup);
     }
   }, [selectedGroup]);
 
+  // Send message (private or group)
   const sendMessage = async () => {
     if (!message.trim()) return;
 
+    const isGroup = Boolean(selectedGroup);
+    const chatId = isGroup ? selectedGroup : receiver;
+
+    if (!chatId) {
+      toast.warn("Please select a recipient first");
+      return;
+    }
+
     const newMessage = {
       senderId: user.id,
+      receiverId: isGroup ? null : receiver,
+      groupId: isGroup ? selectedGroup : null,
       message,
-      groupId: selectedGroup,
     };
 
     try {
-      if (selectedGroup) {
-        socket.emit("sendGroupMessage", newMessage);
-      } else {
-        if (!receiver) {
-          toast.warn("Please select a recipient first");
-          return;
-        }
-        appendMessage(getActiveChatId(), newMessage);
-        socket.emit("sendMessage", {
-          senderId: user.id,
-          receiverId: receiver,
-          message,
-        });
-      }
+      // Emit socket
+      isGroup
+        ? socket.emit("sendGroupMessage", newMessage)
+        : socket.emit("sendMessage", newMessage);
 
+      // Optimistic UI update
+      appendMessage(chatId, newMessage);
+
+      // Save to DB
       await axios.post("http://localhost:5000/api/message", {
         sender: user.id,
-        receiver: selectedGroup || receiver,
+        receiver: isGroup ? null : receiver,
+        groupId: isGroup ? selectedGroup : null,
         content: message,
       });
 
@@ -152,62 +150,92 @@ function Chat() {
     setMessage((prev) => prev + emoji.native);
   };
 
-  const getUsername = useCallback((id) => {
-  if (!id) return "System";
-  if (id === user?.id) return "You";
-  return userMap[id] || "User";
-}, [userMap, user?.id]);
+  const getUsername = useCallback(
+    (id) => {
+      if (!id) return "System";
+      if (id === user?.id) return "You";
+      return userMap[id] || "User";
+    },
+    [userMap, user?.id]
+  );
+
   const getActiveChatId = () => selectedGroup || receiver;
 
   const currentChatMessages = chatMap[getActiveChatId()] || [];
 
   const appendMessage = useCallback((chatId, message) => {
-    setChatMap(prev => ({
+    setChatMap((prev) => ({
       ...prev,
       [chatId]: [...(prev[chatId] || []), message],
     }));
   }, []);
 
-  // Fetch messages when receiver or group changes
+  // Fetch messages on chat change
   useEffect(() => {
-  const fetchMessages = async () => {
-    const chatId = selectedGroup || receiver;
-    if (!chatId) {
-      setHasSelectedChat(false);
+    const fetchMessages = async () => {
+      const chatId = getActiveChatId();
+      if (!chatId) {
+        setHasSelectedChat(false);
+        return;
+      }
+
+      setHasSelectedChat(true);
+
+      try {
+        const url = selectedGroup
+          ? `http://localhost:5000/api/message/group/${chatId}`
+          : `http://localhost:5000/api/message/private/${user.id}/${receiver}`;
+
+        const res = await axios.get(url);
+
+        const transformed = res.data.map((msg) => ({
+          senderId: msg.sender,
+          receiverId: msg.receiver,
+          message: msg.content,
+          createdAt: msg.createdAt,
+          _id: msg._id,
+        }));
+
+        setChatMap((prev) => ({
+          ...prev,
+          [chatId]: transformed,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch chat history:", error);
+        toast.error("Failed to load messages");
+      }
+    };
+
+    fetchMessages();
+  }, [receiver, selectedGroup, user]);
+
+  const handleCreateGroup = async () => {
+    if (!groupName || selectedMembers.length === 0) {
+      toast.warn("Group name and members are required");
       return;
     }
 
-    setHasSelectedChat(true);
-    
     try {
-      const url = selectedGroup
-        ? `http://localhost:5000/api/message/group/${chatId}`
-        : `http://localhost:5000/api/message/private/${user.id}/${receiver}`;
-      
-      const res = await axios.get(url);
-      
-      // Transform the API response to match expected format
-      const transformedMessages = res.data.map(msg => ({
-        senderId: msg.sender,
-        receiverId: msg.receiver,
-        message: msg.content,
-        createdAt: msg.createdAt,
-        _id: msg._id
-      }));
+      const res = await axios.post("http://localhost:5000/api/group/create", {
+        name: groupName,
+        members: [user.id, ...selectedMembers],
+      });
 
-      setChatMap(prev => ({
-        ...prev,
-        [chatId]: transformedMessages,
-      }));
-    } catch (error) {
-      console.error("Failed to fetch chat history:", error);
-      toast.error("Failed to load messages");
+      setGroups((prev) => [...prev, res.data]);
+      setShowCreateModal(false);
+      setGroupName("");
+      setSelectedMembers([]);
+      toast.success("Group created!");
+    } catch (err) {
+      console.error("Failed to create group:", err);
+      toast.error("Group creation failed");
     }
   };
-
-  fetchMessages();
-}, [receiver, selectedGroup, user]);
-
+  useEffect(() => {
+  if (messagesEndRef.current) {
+    messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+  }
+}, [currentChatMessages]);
 
   if (!user || isLoading) {
     return (
@@ -216,6 +244,13 @@ function Chat() {
       </div>
     );
   }
+
+  const handleLogout = () => {
+  socket.disconnect(); // 👈 Explicitly disconnect from server
+  sessionStorage.removeItem("user");
+  window.location.href = "/";
+};
+
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-tr from-blue-100 via-blue-200 to-indigo-200 flex">
@@ -228,6 +263,12 @@ function Chat() {
           onClick={() => setShowCreateModal(true)}
         >
           ➕ Create Group
+        </button>
+        <button
+          className="bg-red-600 hover:bg-red-700 text-white py-2 rounded-full flex items-center justify-center gap-2"
+          onClick={handleLogout}
+        >
+          🚪 Logout
         </button>
 
         {/* User Selection */}
@@ -276,7 +317,7 @@ function Chat() {
       {/* Chat Area */}
       <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col p-4 space-y-4 relative">
         {/* Chat Box */}
-        <div className="flex-grow overflow-y-auto bg-white rounded-xl shadow-inner p-4">
+        <div className="h-[600px] overflow-y-auto bg-white rounded-xl shadow-inner p-4">
           {!hasSelectedChat ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-gray-500 text-center">
@@ -290,38 +331,38 @@ function Chat() {
                 No messages yet. Start the conversation!
               </div>
             </div>
-          ) : (currentChatMessages
-  .filter((msg) =>
-    (msg?.message || msg?.content || "").toLowerCase().includes(searchTerm.toLowerCase())
-  )
-  .map((msg, i) => {
-    const senderId = msg.senderId || msg.sender;
-    const isYou = senderId === user.id;
-    const messageContent = msg.message || msg.content;
-    
-    return (
-      <div
-        key={msg._id || i}
-        className={`mb-2 flex ${isYou ? 'justify-end' : 'justify-start'}`}
-      >
-        <div
-          className={`px-3 py-2 rounded-lg max-w-xs ${
-            isYou ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'
-          }`}
-        >
-          {!isYou && (
-            <div className="text-xs font-semibold text-blue-700 mb-1">
-              {getUsername(senderId)}
-            </div>
+          ) : (
+            currentChatMessages
+              .filter((msg) =>
+                (msg.message || "").toLowerCase().includes(searchTerm.toLowerCase())
+              )
+              .map((msg, i) => {
+                const senderId = msg.senderId;
+                const isYou = senderId === user.id;
+                return (
+                  <div
+                    key={msg._id || i}
+                    className={`mb-2 flex ${isYou ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`px-3 py-2 rounded-lg max-w-xs ${
+                        isYou ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                      }`}
+                    >
+                      {!isYou && (
+                        <div className="text-xs font-semibold text-blue-700 mb-1">
+                          {getUsername(senderId)}
+                        </div>
+                      )}
+                      <div className="text-sm">{msg.message}</div>
+                    </div>
+                  </div>
+                );
+              })
           )}
-          <div className="text-sm">{messageContent}</div>
+          <div ref={messagesEndRef}></div>
         </div>
-      </div>
-    );
-  })
-)}
-        </div>
-
+          
         {/* Emoji Picker */}
         {showEmoji && (
           <div className="absolute bottom-32 left-10 z-50 bg-white border rounded shadow-lg p-2">
@@ -345,7 +386,7 @@ function Chat() {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type your message"
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
           />
           <button
             onClick={sendMessage}
@@ -378,13 +419,12 @@ function Chat() {
                     value={u._id}
                     checked={selectedMembers.includes(u._id)}
                     onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedMembers([...selectedMembers, u._id]);
-                      } else {
-                        setSelectedMembers(
-                          selectedMembers.filter((id) => id !== u._id)
-                        );
-                      }
+                      const checked = e.target.checked;
+                      setSelectedMembers((prev) =>
+                        checked
+                          ? [...prev, u._id]
+                          : prev.filter((id) => id !== u._id)
+                      );
                     }}
                   />
                   <span>{u.username}</span>
