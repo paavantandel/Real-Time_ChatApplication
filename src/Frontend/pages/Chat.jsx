@@ -89,13 +89,13 @@ function Chat() {
 
 
     const handleGroupMessage = (data) => {
-      
-      if (data.senderId !== user.id) {
-        appendMessage(data.groupId, data);
-        const group = groups.find((g) => g._id === data.groupId);
-        toast.info(`New message in group ${group ? group.name : "Group"}: ${data.message}`);
-      }
-    };
+    appendMessage(data.groupId, data);
+    if (data.senderId !== user.id) {
+      const group = groups.find((g) => g._id === data.groupId);
+      toast.info(`New message in group ${group ? group.name : "Group"}: ${data.message}`);
+    }
+};
+
 
     socket.on("getMessage", handleMessage);
     socket.on("getGroupMessage", handleGroupMessage);
@@ -139,7 +139,7 @@ function Chat() {
         : socket.emit("sendMessage", newMessage);
 
       // Optimistic UI update
-      appendMessage(chatId, newMessage);
+      // appendMessage(chatId, newMessage);
 
       // Save to DB
       await axios.post("http://localhost:5000/api/message", {
