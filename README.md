@@ -1,12 +1,55 @@
-# React + Vite
+# 💬 ChatSphere
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**ChatSphere** is a full-stack real-time chat application built with React, Node.js, Express, MongoDB, and Socket.IO. It supports both private messaging and group chats with persistent chat history, emoji support, and modern UI design.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## Expanding the ESLint configuration
+- 🔐 User authentication (login/register)
+- 💬 Private one-to-one chat
+- 👥 Group chat with multiple users
+- 🧠 Real-time messaging using Socket.IO
+- 📦 Chat history persistence in MongoDB
+- 😀 Emoji support using `emoji-mart`
+- 🔍 Message search/filter in chat window
+- ⚡ Toast notifications for new messages
+- 🔄 Persist selected chat (even after refresh)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🧱 Tech Stack
+
+### Frontend:
+- React.js
+- TailwindCSS
+- Socket.IO Client
+- Axios
+- Emoji Mart
+- React Toastify
+
+### Backend:
+- Node.js
+- Express.js
+- MongoDB (with Mongoose)
+- Socket.IO
+- Bcrypt (for password hashing)
+- JSON Web Tokens (JWT)
+
+---
+
+## 🖼️ UI Preview
+
+| Private Chat | Group Chat | Emoji Picker |
+|--------------|------------|--------------|
+| ![private-chat](images/preview1.png) | ![group-chat](docs/preview2.png) | ![emoji-picker](docs/preview3.png) |
+
+---
+
+## 🛠️ Installation & Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/chatsphere.git
+cd chatsphere
