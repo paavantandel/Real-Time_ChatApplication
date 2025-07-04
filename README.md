@@ -40,7 +40,7 @@
 
 ## 🖼️ UI Preview
 
-| Private Chat | Group Chat | Emoji Picker |
+| Login | Register | Private Chat | | Group Chat |
 |--------------|------------|--------------|
 | ![Login](images/Loginchatsphere.png) | ![Register](images/registerchatsphere.png) | ![chatwindow](images/im2.png) | ![groupchatwindow](images/g1.png) |
 
