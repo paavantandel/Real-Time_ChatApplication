@@ -1,3 +1,4 @@
+
 # 💬 ChatSphere
 
 **ChatSphere** is a full-stack real-time chat application built with React, Node.js, Express, MongoDB, and Socket.IO. It supports both private messaging and group chats with persistent chat history, emoji support, and modern UI design.
@@ -40,11 +41,10 @@
 
 ## 🖼️ UI Preview
 
-## 🖼️ UI Preview
-
-| Login | Register | Chat Window | Group Creation |
+| Login | Register | Private Chat | Group Chat |
 |-------|----------|--------------|------------|
-| ![Login](images/Loginchatsphere.png) | ![Register](images/registerchatsphere.png) | ![Chat Window](images/im2.png) | ![Group Creation](images/g1.png) |
+| ![Login](images/Loginchatsphere.png) | ![Register](images/registerchatsphere.png) | ![Private Chat](images/im2.png) | ![Group Chat](images/g1.png) |
+
 
 ---
 
@@ -55,3 +55,75 @@
 ```bash
 git clone https://github.com/yourusername/chatsphere.git
 cd chatsphere
+````
+
+### 2. Setup the server
+
+```bash
+cd server
+npm install
+npm run dev
+```
+
+Create a `.env` file inside `server/`:
+
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+```
+
+### 3. Setup the client
+
+```bash
+cd client
+npm install
+npm start
+```
+
+Ensure the server is running at `http://localhost:5000`.
+
+---
+
+## 📁 Project Structure
+
+```
+chatsphere/
+│
+├── client/             # React Frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   └── Chat.jsx
+│   │   └── App.jsx
+│   └── ...
+│
+├── server/             # Node/Express Backend
+│   ├── routes/
+│   ├── models/
+│   ├── controllers/
+│   └── server.js
+│
+└── README.md
+```
+
+---
+
+## ✨ Future Enhancements
+
+* 🖼️ Profile pictures and status indicators
+* 📱 Responsive mobile design
+* 📌 Pin important messages
+* 📁 File sharing
+* 🔒 End-to-end encryption
+
+---
+
+## 👨‍💻 Developed By
+
+**Arjun Sabu**
+Final Year CSE | GEC Kottayam
+[GitHub](https://github.com/arjunsabu300) • [LinkedIn](https://www.linkedin.com/in/arjun-sabu-8146122a5/)
+
+---
+
+```
