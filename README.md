@@ -42,7 +42,7 @@
 
 | Private Chat | Group Chat | Emoji Picker |
 |--------------|------------|--------------|
-| ![private-chat](images/preview1.png) | ![group-chat](docs/preview2.png) | ![emoji-picker](docs/preview3.png) |
+| ![Login](images/Logincatsphere.png) | ![Register](images/registerchatsphere.png) | ![chatwindow](images/im2.png) | ![chatwindow](images/g1.png) |
 
 ---
 
