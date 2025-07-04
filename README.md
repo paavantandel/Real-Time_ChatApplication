@@ -42,9 +42,9 @@
 
 ## 🖼️ UI Preview
 
-| Login | Register | Private Chat | Group Chat |
+| Login | Register | Private Chat | Group Creation |
 |-------|----------|--------------|------------|
-| ![Login](images/Loginchatsphere.png) | ![Register](images/registerchatsphere.png) | ![Private Chat](images/im2.png) | ![Group Chat](images/g1.png) |
+| ![Login](images/Loginchatsphere.png) | ![Register](images/registerchatsphere.png) | ![Private Chat](images/im2.png) | ![Group Creation](images/g1.png) |
 
 ---
 
