@@ -42,7 +42,7 @@
 
 | Login | Register | Chat Window | Group Creation |
 |-------|----------|--------------|------------|
-| ![Login](images/Loginchatsphere.png) | ![Register](images/registerchatsphere.png) | ![Chat Window](images/im2.png) | ![Group Creation](images/g1.png) |
+| ![Login](images/Loginchatsphere.png) | ![Register](images/registerchatsphere.png) | ![Chat Window](images/im2.jpg) | ![Group Creation](images/g1.jpg) |
 
 
 ---
@@ -61,8 +61,8 @@
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/chatsphere.git
-cd chatsphere
+git clone https://github.com/yourusername/Real-Time_ChatApplication.git
+cd Real-Time_ChatApplication
 ```
 
 ### 2. Install Dependencies
@@ -96,21 +96,50 @@ Ensure the server is running at `http://localhost:5000`.
 ## 📁 Project Structure
 
 ```
-chatsphere/
+Real_time_chat_app/
 │
-├── client/             # React Frontend
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── Chat.jsx
-│   │   └── App.jsx
-│   └── ...
+├── src/
+│   ├── Backend/           # Node.js/Express Backend
+│   │   ├── app.js         # Main server file
+│   │   ├── Models/        # MongoDB schemas
+│   │   │   ├── User.js
+│   │   │   ├── Message.js
+│   │   │   └── Group.js
+│   │   ├── Routes/        # API routes
+│   │   │   ├── Auth.js
+│   │   │   ├── Messages.js
+│   │   │   └── Group.js
+│   │   └── package.json
+│   │
+│   ├── Frontend/          # React Frontend
+│   │   └── pages/         # React components
+│   │       ├── Login.jsx
+│   │       ├── Register.jsx
+│   │       └── Chat.jsx
+│   │
+│   ├── App.jsx            # Main React component
+│   ├── App.css
+│   ├── main.jsx           # React entry point
+│   ├── index.css
+│   └── assets/            # Static assets
+│       ├── react.svg
+│       ├── v1.mp4
+│       └── v2.mp4
 │
-├── server/             # Node/Express Backend
-│   ├── routes/
-│   ├── models/
-│   ├── controllers/
-│   └── server.js
+├── images/                # UI preview images
+│   ├── g1.png
+│   ├── im1.png
+│   ├── im2.png
+│   ├── Loginchatsphere.png
+│   └── registerchatsphere.png
 │
+├── public/                # Public assets
+│   └── vite.svg
+│
+├── package.json           # Frontend dependencies
+├── package-lock.json
+├── vite.config.js         # Vite configuration
+├── eslint.config.js       # ESLint configuration
 └── README.md
 ```
 
@@ -128,9 +157,9 @@ chatsphere/
 
 ## 👨‍💻 Developed By
 
-**Arjun Sabu**
-Final Year CSE | GEC Kottayam
-[GitHub](https://github.com/arjunsabu300) • [LinkedIn](https://www.linkedin.com/in/arjun-sabu-8146122a5/)
+**Paavan Tandel**
+Final Year CSE | GCET
+[GitHub](https://github.com/paavantandel/) • [LinkedIn](https://linkedin.com/in/paavan-tandel-014988265/)
 
 ---
 
