@@ -161,7 +161,3 @@ Real_time_chat_app/
 Final Year CSE | GCET
 [GitHub](https://github.com/paavantandel/) • [LinkedIn](https://linkedin.com/in/paavan-tandel-014988265/)
 
----
-
-## License
-MIT
