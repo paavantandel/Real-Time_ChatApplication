@@ -1,4 +1,3 @@
-
 # 💬 ChatSphere
 
 **ChatSphere** is a full-stack real-time chat application built with React, Node.js, Express, MongoDB, and Socket.IO. It supports both private messaging and group chats with persistent chat history, emoji support, and modern UI design.
@@ -50,15 +49,25 @@
 
 ## 🛠️ Installation & Setup
 
-### 1. Clone the repository
+### Prerequisites
+- Node.js (v16 or higher recommended)
+- npm (comes with Node.js)
+- MongoDB (local or MongoDB Atlas)
+
+### Project Structure
+- `src/Backend/` — Node.js/Express backend (API, WebSocket, MongoDB)
+- `src/Frontend/` — React frontend (Vite)
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/yourusername/chatsphere.git
 cd chatsphere
-````
+```
 
-### 2. Setup the server
+### 2. Install Dependencies
 
+#### Backend
 ```bash
 cd server
 npm install
@@ -73,8 +82,7 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 ```
 
-### 3. Setup the client
-
+#### Frontend
 ```bash
 cd client
 npm install
@@ -126,4 +134,5 @@ Final Year CSE | GEC Kottayam
 
 ---
 
-```
+## License
+MIT
